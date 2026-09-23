@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Scale, History, HelpCircle, Waves } from 'lucide-react';
+import { Scale, History, HelpCircle, Waves, ScanSearch, Info } from 'lucide-react';
 import { ServerStatusBadge } from './server-status';
 
 interface NavbarProps {
@@ -11,8 +11,14 @@ interface NavbarProps {
   onOpenSop: () => void;
 }
 
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 export function Navbar({ useMock, onToggleMock, onOpenSop }: NavbarProps) {
   const pathname = usePathname();
+  const isHome = pathname === '/';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-sky-200 bg-white/95 backdrop-blur-md shadow-sm">
@@ -37,7 +43,7 @@ export function Navbar({ useMock, onToggleMock, onOpenSop }: NavbarProps) {
           <Link
             href="/"
             className={`flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-all min-h-[44px] ${
-              pathname === '/'
+              isHome
                 ? 'bg-[#0EA5E9] text-white shadow-[0_0_16px_rgba(14,165,233,0.35)]'
                 : 'text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9]'
             }`}
@@ -46,6 +52,28 @@ export function Navbar({ useMock, onToggleMock, onOpenSop }: NavbarProps) {
             <Scale className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Estimasi</span>
           </Link>
+
+          {isHome && (
+            <>
+              <button
+                onClick={() => scrollToSection('deteksi')}
+                className="flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9] transition-all min-h-[44px]"
+                title="Cara Kerja Deteksi"
+              >
+                <ScanSearch className="h-4 w-4 shrink-0 text-[#0EA5E9]" />
+                <span className="hidden sm:inline">Deteksi</span>
+              </button>
+
+              <button
+                onClick={() => scrollToSection('informasi')}
+                className="flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9] transition-all min-h-[44px]"
+                title="Informasi Udang Vannamei"
+              >
+                <Info className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span className="hidden sm:inline">Informasi</span>
+              </button>
+            </>
+          )}
 
           <Link
             href="/history"
