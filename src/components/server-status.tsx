@@ -36,10 +36,10 @@ export function ServerStatusBadge({ useMock, onToggleMock }: ServerStatusBadgePr
       <div
         className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-md transition-all ${
           isOnline
-            ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
             : isDegraded
-            ? 'border-amber-500/30 bg-amber-950/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-            : 'border-rose-500/30 bg-rose-950/40 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.15)]'
+            ? 'border-amber-300 bg-amber-50 text-amber-700'
+            : 'border-rose-300 bg-rose-50 text-rose-700'
         }`}
       >
         <span className="relative flex h-2 w-2">
@@ -62,7 +62,7 @@ export function ServerStatusBadge({ useMock, onToggleMock }: ServerStatusBadgePr
         <button
           onClick={refreshHealth}
           disabled={loading}
-          className="ml-0.5 text-white/50 hover:text-white disabled:opacity-40 transition-colors p-0.5 rounded-full hover:bg-white/10"
+          className="ml-0.5 text-[#64748B] hover:text-[#0C4A6E] disabled:opacity-40 transition-colors p-0.5 rounded-full hover:bg-sky-50"
           title="Cek ulang status server API"
           aria-label="Refresh server status"
         >
@@ -73,7 +73,7 @@ export function ServerStatusBadge({ useMock, onToggleMock }: ServerStatusBadgePr
       {/* Modern Mock Switch Component */}
       <label
         htmlFor="mock-toggle-switch"
-        className={`group flex items-center gap-2 cursor-pointer select-none rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+        className={`group flex items-center gap-2 cursor-pointer select-none rounded-full border px-3 py-1.5 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[44px] ${
           useMock
             ? 'border-[#F59E0B] bg-[#F59E0B]/15 text-[#D97706] shadow-[0_0_16px_rgba(245,158,11,0.2)]'
             : 'border-sky-200 bg-white text-[#334155] hover:border-sky-300'
@@ -97,7 +97,7 @@ export function ServerStatusBadge({ useMock, onToggleMock }: ServerStatusBadgePr
             className={`inline-block h-4 w-4 transform rounded-full transition-transform duration-200 ease-in-out ${
               useMock
                 ? 'translate-x-4 bg-[#F59E0B] shadow-sm'
-                : 'translate-x-0 bg-slate-300'
+                : 'translate-x-0 bg-sky-300'
             }`}
           />
         </div>

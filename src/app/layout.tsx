@@ -16,8 +16,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'ShrimpWeightAI: Estimator Berat Udang Berbasis Kamera 29cm',
   description:
-    'Aplikasi estimasi berat udang akuakultur presisi tinggi menggunakan YOLOv8-Seg dan Support Vector Regression (SVR) pada jarak vertikal 29 cm.',
-  keywords: ['shrimp weight prediction', 'akuakultur udang', 'YOLOv8-Seg', 'SVR', 'tambak udang'],
+    'Aplikasi estimasi berat udang akuakultur presisi tinggi menggunakan YOLOv26-Seg dan Support Vector Regression (SVR) pada jarak vertikal 29 cm.',
+  keywords: ['shrimp weight prediction', 'akuakultur udang', 'YOLOv26-Seg', 'SVR', 'tambak udang'],
 };
 
 export default function RootLayout({

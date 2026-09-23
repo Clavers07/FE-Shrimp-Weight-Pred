@@ -177,11 +177,11 @@ export function PolygonCanvas({
   }, [renderCanvas]);
 
   return (
-    <div className="relative w-full rounded-[20px] bg-[#0A1A2F] p-2.5 shadow-xl border border-white/10">
+    <div className="relative w-full rounded-[20px] bg-white p-2.5 shadow-md border border-sky-200">
       {/* Canvas Container */}
-      <div ref={containerRef} className="relative w-full overflow-hidden rounded-[16px] bg-[#0A1A2F] min-h-[220px] flex items-center justify-center">
+      <div ref={containerRef} className="relative w-full overflow-hidden rounded-[16px] bg-[#F0F9FF] min-h-[220px] flex items-center justify-center">
         {!imageLoaded && (
-          <div className="flex flex-col items-center gap-2 p-8 text-slate-400">
+          <div className="flex flex-col items-center gap-2 p-8 text-[#64748B]">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B9FE8] border-t-transparent" />
             <span className="text-xs">Memuat visualisasi gambar & segmentasi...</span>
           </div>
@@ -195,7 +195,7 @@ export function PolygonCanvas({
       </div>
 
       {/* Canvas Toolbar Controls */}
-      <div className="mt-3 flex items-center justify-between px-2 text-xs text-slate-300">
+      <div className="mt-3 flex items-center justify-between px-2 text-xs text-[#475569]">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -203,7 +203,7 @@ export function PolygonCanvas({
             className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-bold transition-all min-h-[36px] ${
               showPolygons
                 ? 'bg-[#3B9FE8]/20 text-[#3B9FE8] border border-[#3B9FE8]/40 hover:bg-[#3B9FE8]/30'
-                : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'
+                : 'bg-sky-50 text-[#64748B] border border-sky-200 hover:bg-sky-100'
             }`}
           >
             {showPolygons ? <Eye className="h-3.5 w-3.5 text-[#3B9FE8]" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -211,10 +211,10 @@ export function PolygonCanvas({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+        <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
           <Layers className="h-3.5 w-3.5 text-[#3B9FE8]" />
           <span>
-            Piksel Asli: <strong className="text-white">{originalWidth} × {originalHeight} px</strong>
+            Piksel Asli: <strong className="text-[#0C4A6E]">{originalWidth} × {originalHeight} px</strong>
           </span>
         </div>
       </div>
