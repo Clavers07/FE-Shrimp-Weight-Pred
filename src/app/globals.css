@@ -1,85 +1,69 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+:root {
+  --bg-primary: #F0F9FF;       /* sky-50: background utama terang bersih */
+  --bg-secondary: #E0F2FE;     /* sky-100: section alternatif */
+  --bg-card: #FFFFFF;          /* card putih bersih */
+  --bg-navy: #0C4A6E;          /* sky-900: elemen gelap/header */
+  --accent-blue: #0EA5E9;      /* sky-500: aksen biru cerah utama */
+  --accent-blue-hover: #0284C7; /* sky-600 */
+  --accent-blue-dark: #0369A1; /* sky-700 */
+  --accent-teal: #06B6D4;      /* cyan-500: aksen sekunder */
+  --accent-gold: #F59E0B;      /* amber-500: CTA highlight */
+  --accent-gold-hover: #D97706;
+  --text-dark: #0C4A6E;        /* sky-900: teks utama */
+  --text-body: #334155;        /* slate-700: teks body */
+  --text-muted: #64748B;       /* slate-500 */
+  --text-light: #FFFFFF;
+  --border-blue: rgba(14, 165, 233, 0.25);
+  --overlay-water: rgba(14, 165, 233, 0.06);
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+  --font-heading-weight: 800;
+  --font-heading-size-desktop: 56px;
+  --font-heading-size-mobile: 32px;
+  --font-body-size: 16px;
+  --line-height-body: 1.6;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 206 79% 28%; /* Aqua Deep Blue #0F4C81 */
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 174 72% 32%; /* Fresh Water Teal #028090 */
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 168 100% 33%; /* Pond Green #00A896 */
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 206 79% 28%;
-
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 206 85% 42%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 174 72% 40%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 168 85% 40%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 206 85% 42%;
-  }
+  --radius-card-lg: 24px;
+  --radius-button: 999px;
+  --radius-image: 20px;
+  --shadow-card: 0 4px 24px rgba(14, 165, 233, 0.12);
+  --shadow-glow-blue: 0 0 24px rgba(14, 165, 233, 0.30);
+  --shadow-glow-gold: 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
 @theme {
-  --color-aqua-50: #f0f9ff;
-  --color-aqua-100: #e0f2fe;
-  --color-aqua-500: #028090;
-  --color-aqua-700: #0f4c81;
-  --color-aqua-900: #0a3154;
+  --color-bg-primary: #F0F9FF;
+  --color-bg-secondary: #E0F2FE;
+  --color-bg-card: #FFFFFF;
+  --color-bg-navy: #0C4A6E;
+  --color-accent-blue: #0EA5E9;
+  --color-accent-blue-hover: #0284C7;
+  --color-accent-blue-dark: #0369A1;
+  --color-accent-teal: #06B6D4;
+  --color-accent-gold: #F59E0B;
+  --color-accent-gold-hover: #D97706;
+  --color-text-dark: #0C4A6E;
+  --color-text-body: #334155;
+  --color-text-muted: #64748B;
+  --color-text-light: #FFFFFF;
+  --color-overlay-water: rgba(14, 165, 233, 0.06);
 
-  --color-pond-400: #02c39a;
-  --color-pond-500: #00a896;
-  --color-pond-600: #05668d;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-feature-settings: "rlig" 1, "calt" 1;
+  background-color: var(--bg-primary);
+  color: var(--text-body);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading), sans-serif;
 }
 
 /* Aquaculture custom subtle animations */
@@ -88,8 +72,18 @@ body {
   50% { opacity: 0.7; }
 }
 
+@keyframes ripple-wave {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-6px) scale(1.01); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
 .animate-pulse-subtle {
   animation: pulse-subtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-ripple {
+  animation: ripple-wave 8s ease-in-out infinite;
 }
 
 /* Responsive Canvas Wrapper styling */
@@ -99,23 +93,24 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #0b132b;
-  border-radius: var(--radius);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-card-lg);
   overflow: hidden;
 }
 
-/* Custom scrollbar for data tables */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #E0F2FE;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.3);
+  background: rgba(14, 165, 233, 0.35);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.5);
+  background: rgba(14, 165, 233, 0.65);
 }
+

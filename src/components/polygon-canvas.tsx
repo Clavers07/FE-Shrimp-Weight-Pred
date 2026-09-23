@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ShrimpPrediction } from '@/lib/types';
-import { Eye, EyeOff, Maximize2, Layers } from 'lucide-react';
+import { Eye, EyeOff, Layers } from 'lucide-react';
 
 interface PolygonCanvasProps {
   imageSrc: string;
@@ -27,7 +27,7 @@ export function PolygonCanvas({
 
   const [showPolygons, setShowPolygons] = useState<boolean>(true);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-  const [displayDim, setDisplayDim] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [, setDisplayDim] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   // Load Image element once
   useEffect(() => {
@@ -58,7 +58,7 @@ export function PolygonCanvas({
 
     setDisplayDim({ width: displayWidth, height: displayHeight });
 
-    // Handle high-DPI (Retina) screen sharpness
+    // Handle high-DPI screen sharpness
     const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     canvas.width = Math.round(displayWidth * dpr);
     canvas.height = Math.round(displayHeight * dpr);
@@ -88,12 +88,12 @@ export function PolygonCanvas({
 
         const isSelected = selectedPredictionId === pred.id;
 
-        // Choose color per shrimp or default aqua
+        // Choose color per shrimp: vibrant ocean palette
         const colors = [
-          { stroke: '#00F0FF', fill: 'rgba(0, 240, 255, 0.25)', labelBg: '#00F0FF', text: '#051923' },
-          { stroke: '#10B981', fill: 'rgba(16, 185, 129, 0.25)', labelBg: '#10B981', text: '#FFFFFF' },
-          { stroke: '#F59E0B', fill: 'rgba(245, 158, 11, 0.25)', labelBg: '#F59E0B', text: '#FFFFFF' },
-          { stroke: '#EC4899', fill: 'rgba(236, 72, 153, 0.25)', labelBg: '#EC4899', text: '#FFFFFF' },
+          { stroke: '#3B9FE8', fill: 'rgba(59, 159, 232, 0.28)', labelBg: '#3B9FE8', text: '#0A1A2F' },
+          { stroke: '#E8A33D', fill: 'rgba(232, 163, 61, 0.28)', labelBg: '#E8A33D', text: '#0A1A2F' },
+          { stroke: '#10B981', fill: 'rgba(16, 185, 129, 0.28)', labelBg: '#10B981', text: '#0A1A2F' },
+          { stroke: '#A855F7', fill: 'rgba(168, 85, 247, 0.28)', labelBg: '#A855F7', text: '#FFFFFF' },
         ];
         const colorScheme = colors[index % colors.length];
 
@@ -117,11 +117,11 @@ export function PolygonCanvas({
         ctx.closePath();
 
         // Polygon Fill & Stroke
-        ctx.fillStyle = isSelected ? 'rgba(255, 221, 0, 0.45)' : colorScheme.fill;
+        ctx.fillStyle = isSelected ? 'rgba(232, 163, 61, 0.45)' : colorScheme.fill;
         ctx.fill();
 
         ctx.lineWidth = isSelected ? 3.5 : 2.5;
-        ctx.strokeStyle = isSelected ? '#FFD700' : colorScheme.stroke;
+        ctx.strokeStyle = isSelected ? '#E8A33D' : colorScheme.stroke;
         ctx.stroke();
 
         // Calculate Centroid for weight badge rendering
@@ -142,16 +142,16 @@ export function PolygonCanvas({
         const badgeY = Math.max(5, Math.min(displayHeight - badgeHeight - 5, centerY - badgeHeight / 2));
 
         // Badge background
-        ctx.fillStyle = isSelected ? '#FFD700' : colorScheme.labelBg;
-        ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 4;
+        ctx.fillStyle = isSelected ? '#E8A33D' : colorScheme.labelBg;
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 6);
+        ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 999);
         ctx.fill();
         ctx.shadowBlur = 0;
 
         // Badge text
-        ctx.fillStyle = isSelected ? '#000000' : colorScheme.text;
+        ctx.fillStyle = isSelected ? '#0A1A2F' : colorScheme.text;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2 + 1);
@@ -177,43 +177,48 @@ export function PolygonCanvas({
   }, [renderCanvas]);
 
   return (
-    <div className="relative w-full rounded-2xl bg-slate-950 p-2 shadow-xl ring-1 ring-slate-800">
+    <div className="relative w-full rounded-[20px] bg-[#0A1A2F] p-2.5 shadow-xl border border-white/10">
       {/* Canvas Container */}
-      <div ref={containerRef} className="relative w-full overflow-hidden rounded-xl bg-slate-900 min-h-[220px] flex items-center justify-center">
+      <div ref={containerRef} className="relative w-full overflow-hidden rounded-[16px] bg-[#0A1A2F] min-h-[220px] flex items-center justify-center">
         {!imageLoaded && (
           <div className="flex flex-col items-center gap-2 p-8 text-slate-400">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-            <span className="text-xs">Memuat canvas gambar & segmentasi...</span>
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B9FE8] border-t-transparent" />
+            <span className="text-xs">Memuat visualisasi gambar & segmentasi...</span>
           </div>
         )}
 
-        <canvas ref={canvasRef} className="block max-w-full h-auto cursor-pointer" />
+        <canvas
+          ref={canvasRef}
+          className="block max-w-full h-auto cursor-pointer"
+          onClick={() => onSelectPrediction && onSelectPrediction(null)}
+        />
       </div>
 
       {/* Canvas Toolbar Controls */}
-      <div className="mt-2.5 flex items-center justify-between px-2 text-xs text-slate-300">
+      <div className="mt-3 flex items-center justify-between px-2 text-xs text-slate-300">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setShowPolygons(!showPolygons)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-medium transition-colors ${
+            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-bold transition-all min-h-[36px] ${
               showPolygons
-                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 hover:bg-cyan-900/80'
-                : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+                ? 'bg-[#3B9FE8]/20 text-[#3B9FE8] border border-[#3B9FE8]/40 hover:bg-[#3B9FE8]/30'
+                : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'
             }`}
           >
-            {showPolygons ? <Eye className="h-3.5 w-3.5 text-cyan-400" /> : <EyeOff className="h-3.5 w-3.5" />}
+            {showPolygons ? <Eye className="h-3.5 w-3.5 text-[#3B9FE8]" /> : <EyeOff className="h-3.5 w-3.5" />}
             <span>Overlay Poligon ({showPolygons ? 'Aktif' : 'Sembunyi'})</span>
           </button>
         </div>
 
         <div className="flex items-center gap-2 text-[11px] text-slate-400">
-          <Layers className="h-3.5 w-3.5 text-slate-500" />
+          <Layers className="h-3.5 w-3.5 text-[#3B9FE8]" />
           <span>
-            Piksel Asli: <strong>{originalWidth} × {originalHeight} px</strong>
+            Piksel Asli: <strong className="text-white">{originalWidth} × {originalHeight} px</strong>
           </span>
         </div>
       </div>
     </div>
   );
 }
+
