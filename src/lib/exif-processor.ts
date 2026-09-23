@@ -11,14 +11,13 @@ export interface ProcessedImageResult {
   processedSizeBytes: number;
 }
 
-const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8 MB threshold for auto-uniform resize
-const MAX_DIMENSION_PX = 2000; // max length of long edge
+const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB match backend API contract limit
 
 /**
  * Process uploaded image file:
  * 1. Read EXIF orientation using exifr
- * 2. Rotate pixel data on canvas if necessary so orientation is visually standard
- * 3. Uniformly scale down if file size > 8MB while keeping 100% aspect ratio (NO CROP)
+ * 2. Rotate pixel data on canvas if necessary so orientation is visually standard (at 100% full scale)
+ * 3. Preserve full original pixel resolution (NO downscaling) so pixel-based ML features (area, length, width, perimeter) remain accurate.
  */
 export async function processShrimpImage(inputFile: File): Promise<ProcessedImageResult> {
   const originalSizeBytes = inputFile.size;
@@ -45,9 +44,9 @@ export async function processShrimpImage(inputFile: File): Promise<ProcessedImag
   const visualH = is90Deg ? origW : origH;
 
   const needsExifFix = orientation > 1;
-  const needsResize = originalSizeBytes > MAX_FILE_SIZE_BYTES || Math.max(visualW, visualH) > MAX_DIMENSION_PX;
+  const needsResize = originalSizeBytes > MAX_FILE_SIZE_BYTES;
 
-  // If no rotation needed and no resize needed, return original file
+  // If no rotation needed and no size reduction needed, return original file directly (matching Postman behavior)
   if (!needsExifFix && !needsResize) {
     const url = URL.createObjectURL(inputFile);
     return {
@@ -62,12 +61,13 @@ export async function processShrimpImage(inputFile: File): Promise<ProcessedImag
     };
   }
 
-  // 3. Calculate target dimensions (UNIFORM scaling maintaining aspect ratio)
+  // 3. Keep 100% full visual dimensions (preserve exact pixel scale for accurate SVR area/length calculation)
   let targetW = visualW;
   let targetH = visualH;
 
   if (needsResize) {
-    const scaleFactor = Math.min(1, MAX_DIMENSION_PX / Math.max(visualW, visualH));
+    // Only downscale if file actually exceeds 15MB limit
+    const scaleFactor = Math.sqrt(MAX_FILE_SIZE_BYTES / originalSizeBytes);
     targetW = Math.round(visualW * scaleFactor);
     targetH = Math.round(visualH * scaleFactor);
   }
@@ -97,7 +97,7 @@ export async function processShrimpImage(inputFile: File): Promise<ProcessedImag
         else reject(new Error('Canvas toBlob gagal'));
       },
       'image/jpeg',
-      0.92
+      0.95
     );
   });
 
