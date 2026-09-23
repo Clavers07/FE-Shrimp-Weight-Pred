@@ -16,10 +16,95 @@ export function getScanHistory(): ScanHistoryItem[] {
   }
 }
 
-export function saveScanResultToHistory(item: Omit<ScanHistoryItem, 'id' | 'timestamp'>): ScanHistoryItem {
+/**
+ * Creates a lightweight persistent JPEG base64 thumbnail (~300px max)
+ * so history images persist across page refreshes and browser sessions
+ * without filling localStorage quota.
+ */
+async function generatePersistentThumbnail(sourceUrl: string): Promise<string> {
+  if (!sourceUrl) return '';
+  // If it's already a data: URL, return it
+  if (sourceUrl.startsWith('data:')) return sourceUrl;
+
+  try {
+    return await new Promise<string>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const maxDim = 400;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(sourceUrl);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(dataUrl);
+        } catch {
+          resolve(sourceUrl);
+        }
+      };
+      img.onerror = () => resolve(sourceUrl);
+      img.src = sourceUrl;
+    });
+  } catch {
+    return sourceUrl;
+  }
+}
+
+export async function saveScanResultToHistory(
+  item: Omit<ScanHistoryItem, 'id' | 'timestamp'>
+): Promise<ScanHistoryItem> {
   const history = getScanHistory();
+
+  // Deduplication check:
+  // 1. By requestId if available
+  // 2. Or if the exact same image name + weight was saved within the last 15 seconds
+  const isDuplicate = history.some((h) => {
+    if (item.requestId && h.requestId && item.requestId === h.requestId) {
+      return true;
+    }
+    const isSameName = h.imageName === item.imageName;
+    const isSameWeight = Math.abs(h.totalWeightGram - item.totalWeightGram) < 0.001;
+    const isRecent = Math.abs(Date.now() - new Date(h.timestamp).getTime()) < 15000;
+    return isSameName && isSameWeight && isRecent;
+  });
+
+  if (isDuplicate) {
+    const existing = history.find((h) => {
+      if (item.requestId && h.requestId && item.requestId === h.requestId) return true;
+      return h.imageName === item.imageName && Math.abs(h.totalWeightGram - item.totalWeightGram) < 0.001;
+    });
+    return existing || history[0];
+  }
+
+  // Convert ephemeral blob: URL into persistent base64 thumbnail
+  let persistentDataUrl = item.imageDataUrl || '';
+  if (persistentDataUrl && persistentDataUrl.startsWith('blob:')) {
+    persistentDataUrl = await generatePersistentThumbnail(persistentDataUrl);
+  }
+
   const newItem: ScanHistoryItem = {
     ...item,
+    imageDataUrl: persistentDataUrl,
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
   };
@@ -31,6 +116,13 @@ export function saveScanResultToHistory(item: Omit<ScanHistoryItem, 'id' | 'time
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.error('[Storage] Error saving to localStorage (storage full?):', err);
+    // If quota exceeded, try trimming older items
+    try {
+      const trimmed = [newItem, ...history.slice(0, 10)];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    } catch {
+      // ignore
+    }
   }
 
   return newItem;

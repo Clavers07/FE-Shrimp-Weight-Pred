@@ -12,7 +12,7 @@ export default function HistoryPage() {
   const [isSopOpen, setIsSopOpen] = useState<boolean>(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0A1A2F] text-white">
+    <div className="flex min-h-screen flex-col bg-[#F0F9FF] text-[#334155]">
       <Navbar
         useMock={useMock}
         onToggleMock={setUseMock}
@@ -21,7 +21,7 @@ export default function HistoryPage() {
 
       <main className="flex-1 relative overflow-hidden">
         {/* Subtle Water Ripple Background Overlay */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-96 opacity-25 select-none overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-96 opacity-30 select-none overflow-hidden">
           <Image
             src="/assets/water-ripple.svg"
             alt="Water ripple texture"

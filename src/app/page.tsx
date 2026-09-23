@@ -68,10 +68,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 {/* Hero Text Column */}
                 <div className="lg:col-span-7 space-y-4">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-3.5 py-1 text-xs font-bold text-[#0EA5E9]">
-                    <Sparkles className="h-3.5 w-3.5 text-[#E8A33D]" />
-                    <span>Inovasi Akuakultur Digital</span>
-                  </div>
+
 
                   <h1 className="text-3xl sm:text-4xl lg:text-[48px] font-extrabold tracking-tight text-[#0C4A6E] font-heading leading-[1.15]">
                     Deteksi & Estimasi Berat Udang <span className="text-[#0EA5E9]"> Menggunakan Kamera Digital</span>
@@ -82,7 +79,7 @@ export default function HomePage() {
                   </p>
 
                   {/* Highlights list */}
-                  <div className="pt-2 flex flex-wrap gap-4 text-xs font-semibold text-slate-300">
+                  <div className="pt-2 flex flex-wrap gap-4 text-xs font-semibold">
                     <div className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 border border-sky-200 text-[#334155] shadow-sm">
                       <Target className="h-4 w-4 text-[#F59E0B]" />
                       <span>Jarak 29cm Vertikal</span>
@@ -112,10 +109,10 @@ export default function HomePage() {
 
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-xl bg-[#0C4A6E]/90 px-3 py-2 text-xs backdrop-blur-md border border-white/10">
                       <div className="flex items-center gap-2">
-                        <span className="flex h-2 w-2 rounded-full bg-[#F59E0B] animate-ping" />
+                        <span className="flex h-2 w-2 rounded-full bg-[#F59E0B]" />
                         <span className="font-semibold text-white">Standar Pemotretan 29 cm</span>
                       </div>
-                      <span className="text-[11px] text-[#0EA5E9] font-bold">YOLOv8-Seg</span>
+                      <span className="text-[11px] text-[#0EA5E9] font-bold">YOLOv26-Seg</span>
                     </div>
                   </div>
                 </div>
@@ -167,15 +164,10 @@ export default function HomePage() {
         {/* ═══════════════════════════════════════════════
             SECTION: DETEKSI
         ═══════════════════════════════════════════════ */}
-        {!activeResult && (
-          <section id="deteksi" className="mt-0 scroll-mt-24 border-t border-sky-100 bg-gradient-to-b from-[#E0F2FE] to-[#F0F9FF] py-16 sm:py-20">
+        <section id="deteksi" className="mt-12 scroll-mt-24 border-t border-sky-100 bg-gradient-to-b from-[#E0F2FE] to-[#F0F9FF] py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               {/* Header */}
               <div className="mb-12 text-center">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-4 py-1.5 text-xs font-bold text-[#0EA5E9] mb-4">
-                  <ScanSearch className="h-3.5 w-3.5" />
-                  <span>Cara Kerja Sistem</span>
-                </div>
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0C4A6E] font-heading mb-3">
                   Bagaimana Sistem <span className="text-[#0EA5E9]">Mendeteksi</span> Udang?
                 </h2>
@@ -202,8 +194,8 @@ export default function HomePage() {
                     color: 'text-violet-500',
                     bg: 'bg-violet-50',
                     border: 'border-violet-200',
-                    title: 'Segmentasi YOLOv8',
-                    desc: 'Model YOLOv8-Seg mendeteksi dan menggambar poligon presisi di setiap individu udang dalam gambar.',
+                    title: 'Segmentasi YOLOv26',
+                    desc: 'Model YOLOv26-Seg mendeteksi dan menggambar poligon presisi di setiap individu udang dalam gambar.',
                   },
                   {
                     step: '03',
@@ -232,7 +224,7 @@ export default function HomePage() {
                       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.bg} border ${item.border}`}>
                         <item.icon className={`h-5 w-5 ${item.color}`} />
                       </div>
-                      <span className="text-2xl font-black text-slate-100 leading-none select-none">{item.step}</span>
+                      <span className="text-2xl font-black text-sky-200 leading-none select-none">{item.step}</span>
                     </div>
                     <div>
                       <h3 className="text-sm font-extrabold text-[#0C4A6E] font-heading mb-1">{item.title}</h3>
@@ -245,7 +237,7 @@ export default function HomePage() {
               {/* Stats Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
                 {[
-                  { icon: Cpu, label: 'Model AI', value: 'YOLOv8-Seg', sub: 'Instance Segmentation', color: 'text-[#0EA5E9]' },
+                  { icon: Cpu, label: 'Model AI', value: 'YOLOv26-Seg', sub: 'Instance Segmentation', color: 'text-[#0EA5E9]' },
                   { icon: BarChart3, label: 'Regresi', value: 'SVR', sub: 'Support Vector Regression', color: 'text-violet-500' },
                   { icon: Ruler, label: 'Jarak Kamera', value: '29 cm', sub: 'Vertikal tegak lurus', color: 'text-amber-500' },
                   { icon: FlaskConical, label: 'Input Fitur', value: '2 Fitur', sub: 'Area + Perimeter piksel', color: 'text-emerald-500' },
@@ -284,20 +276,14 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        )}
 
         {/* ═══════════════════════════════════════════════
             SECTION: INFORMASI UDANG VANNAMEI
         ═══════════════════════════════════════════════ */}
-        {!activeResult && (
-          <section id="informasi" className="scroll-mt-24 border-t border-sky-100 bg-white py-16 sm:py-20">
+        <section id="informasi" className="scroll-mt-24 border-t border-sky-100 bg-white py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               {/* Header */}
               <div className="mb-12 text-center">
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-50 px-4 py-1.5 text-xs font-bold text-emerald-600 mb-4">
-                  <Fish className="h-3.5 w-3.5" />
-                  <span>Panduan Akuakultur</span>
-                </div>
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0C4A6E] font-heading mb-3">
                   Mengenal Udang <span className="text-emerald-500">Vannamei</span>
                 </h2>
@@ -412,11 +398,11 @@ export default function HomePage() {
                   <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-sky-200 hidden sm:block" />
                   <div className="space-y-4">
                     {[
-                      { phase: 'Benur (PL-12)', days: 'Hari 1–7', desc: 'Post-larva ukuran 0,01 g ditebar ke tambak persiapan. Kepadatan awal 100–200 ekor/m².', color: 'bg-sky-400' },
-                      { phase: 'Juvenil', days: 'Hari 8–30', desc: 'Pertumbuhan cepat mencapai berat 0,5–2 g. Monitoring kualitas air dan pemberian pakan intensif.', color: 'bg-violet-400' },
-                      { phase: 'Sub-Dewasa', days: 'Hari 31–60', desc: 'Berat mencapai 3–10 g. Sampling berat dilakukan setiap 7–10 hari untuk penyesuaian dosis pakan.', color: 'bg-amber-400' },
-                      { phase: 'Panen Parsial', days: 'Hari 60–75', desc: 'Panen selektif udang ukuran 15–18 g untuk menjaga kepadatan dan percepat pertumbuhan sisanya.', color: 'bg-emerald-400' },
-                      { phase: 'Panen Total', days: 'Hari 90–120', desc: 'Seluruh biomassa dipanen pada berat ideal 20–25 g/ekor. Estimasi berat ShrimpWeightAI digunakan di tahap ini.', color: 'bg-[#0EA5E9]' },
+                      { phase: 'Benur (PL-12)', days: 'Hari 1-7', desc: 'Post-larva ukuran 0,01 g ditebar ke tambak persiapan. Kepadatan awal 100-200 ekor/m².', color: 'bg-sky-400' },
+                      { phase: 'Juvenil', days: 'Hari 8-30', desc: 'Pertumbuhan cepat mencapai berat 0,5-2 g. Monitoring kualitas air dan pemberian pakan intensif.', color: 'bg-violet-400' },
+                      { phase: 'Sub-Dewasa', days: 'Hari 31-60', desc: 'Berat mencapai 3-10 g. Sampling berat dilakukan setiap 7-10 hari untuk penyesuaian dosis pakan.', color: 'bg-amber-400' },
+                      { phase: 'Panen Parsial', days: 'Hari 60-75', desc: 'Panen selektif udang ukuran 15-18 g untuk menjaga kepadatan dan percepat pertumbuhan sisanya.', color: 'bg-emerald-400' },
+                      { phase: 'Panen Total', days: 'Hari 90-120', desc: 'Seluruh biomassa dipanen pada berat ideal 20-25 g/ekor. Estimasi berat ShrimpWeightAI digunakan di tahap ini.', color: 'bg-[#0EA5E9]' },
                     ].map((phase, idx) => (
                       <div key={phase.phase} className="relative flex items-start gap-4 sm:pl-12">
                         <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${phase.color} text-white text-xs font-black shadow-sm sm:absolute sm:left-0 sm:top-0`}>
@@ -451,7 +437,6 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        )}
       </main>
 
       <Footer onOpenSop={() => setIsSopOpen(true)} />
