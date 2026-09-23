@@ -1,6 +1,7 @@
 'use client';
 
-import { X, Check, AlertTriangle, ArrowDown, Camera, Sun, Layers } from 'lucide-react';
+import { useEffect } from 'react';
+import { X, Check, AlertTriangle, ArrowDown, Camera, Ruler, Sun, Layers } from 'lucide-react';
 
 interface SopDialogProps {
   isOpen: boolean;
@@ -8,128 +9,154 @@ interface SopDialogProps {
 }
 
 export function SopDialog({ isOpen, onClose }: SopDialogProps) {
+  // Listen for Escape key to close modal (Accessibility requirement R-32)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900 dark:text-slate-100">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[24px] border border-[#3B9FE8]/30 bg-[#0F2440] p-6 sm:p-8 text-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
+          className="absolute top-5 right-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors"
+          title="Tutup Panduan"
+          aria-label="Tutup Panduan SOP"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F4C81] text-white">
-            <Camera className="h-5 w-5" />
+        {/* Dialog Header */}
+        <div className="flex items-center gap-3.5 border-b border-white/10 pb-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0A1A2F] border border-[#3B9FE8]/40 text-[#3B9FE8] shadow-md">
+            <Camera className="h-6 w-6 text-[#E8A33D]" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg sm:text-xl font-extrabold text-white font-heading">
               SOP Pemotretan Udang (Jarak 29 cm)
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-300">
               Panduan resmi untuk akurasi estimasi berat berbasis regresi fitur piksel.
             </p>
           </div>
         </div>
 
         {/* Visual Diagram */}
-        <div className="my-5 rounded-2xl bg-gradient-to-b from-sky-900 to-slate-900 p-6 text-white shadow-inner">
+        <div className="my-6 rounded-[20px] border border-white/10 bg-[#0A1A2F] p-6 text-white shadow-inner">
           <div className="flex flex-col items-center">
             {/* Phone/Camera icon */}
-            <div className="flex items-center gap-2 rounded-lg bg-cyan-500/20 px-3 py-1.5 ring-1 ring-cyan-400/40">
-              <Camera className="h-5 w-5 text-cyan-300" />
-              <span className="text-xs font-bold text-cyan-200">Lensa Kamera HP</span>
+            <div className="flex items-center gap-2 rounded-full bg-[#3B9FE8]/20 border border-[#3B9FE8]/40 px-4 py-2">
+              <Camera className="h-4 w-4 text-[#3B9FE8]" />
+              <span className="text-xs font-extrabold text-[#3B9FE8]">Lensa Kamera HP (Posisi Datar)</span>
             </div>
 
             {/* Distance line */}
-            <div className="my-2 flex flex-col items-center">
-              <div className="h-4 w-0.5 bg-dashed bg-cyan-400"></div>
-              <div className="my-1 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-xs font-extrabold text-slate-950 shadow-md">
-                <ArrowDown className="h-3.5 w-3.5" />
+            <div className="my-2.5 flex flex-col items-center">
+              <div className="h-5 w-0.5 border-r border-dashed border-[#3B9FE8]"></div>
+              <div className="my-1.5 flex items-center gap-2 rounded-full bg-[#E8A33D] px-4 py-1.5 text-xs font-black text-[#0A1A2F] shadow-lg">
+                <ArrowDown className="h-4 w-4" />
                 <span>TINGGI TEGAK LURUS = 29 CM</span>
               </div>
-              <div className="h-4 w-0.5 bg-dashed bg-cyan-400"></div>
+              <div className="h-5 w-0.5 border-r border-dashed border-[#3B9FE8]"></div>
             </div>
 
             {/* Base platform */}
-            <div className="w-full max-w-xs rounded-xl bg-slate-800 p-3 text-center ring-1 ring-slate-700">
-              <div className="mx-auto h-3 w-16 rounded-full bg-amber-300/80 shadow-sm animate-pulse-subtle mb-1"></div>
-              <span className="text-[11px] font-semibold text-slate-300">
-                Alas Peletakan Udang (Polos & Netral)
+            <div className="w-full max-w-sm rounded-2xl bg-[#0F2440] p-4 text-center border border-white/10 shadow-md">
+              <div className="mx-auto h-3 w-20 rounded-full bg-[#E8A33D]/60 shadow-sm animate-pulse-subtle mb-2"></div>
+              <span className="text-xs font-bold text-slate-200">
+                Alas Peletakan Udang (Polos & Netral Tanpa Motif)
               </span>
             </div>
           </div>
         </div>
 
-        {/* Steps List */}
-        <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
-          <div className="flex gap-3">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 font-bold text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
-              1
+        {/* Steps Grid with Custom Icons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="rounded-2xl border border-white/10 bg-[#0A1A2F]/60 p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-[#E8A33D] font-bold">
+              <Ruler className="h-4 w-4 text-[#E8A33D]" />
+              <h4 className="font-heading text-sm text-white">1. Ukur Jarak 29 cm</h4>
             </div>
-            <div>
-              <h4 className="font-bold text-slate-900 dark:text-white">Ukur Jarak 29 cm Tegak Lurus</h4>
-              <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                Pastikan posisi lensa kamera berada tepat 29 cm di atas alas peletakan udang secara vertikal (kemiringan 90°).
-              </p>
-            </div>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Pastikan lensa kamera berada tepat pada ketinggian 29 cm tegak lurus (kemiringan 90°) dari permukaan alas.
+            </p>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 font-bold text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
-              2
+          <div className="rounded-2xl border border-white/10 bg-[#0A1A2F]/60 p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-[#3B9FE8] font-bold">
+              <Layers className="h-4 w-4 text-[#3B9FE8]" />
+              <h4 className="font-heading text-sm text-white">2. Alas Kontras Bersih</h4>
             </div>
-            <div>
-              <h4 className="font-bold text-slate-900 dark:text-white">Gunakan Alas Kontras Tanpa Motif</h4>
-              <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                Gunakan papan / nampan berwarna kontras netral (misalnya putih atau biru polos) agar kontur poligon udang terdeteksi presisi oleh YOLOv8.
-              </p>
-            </div>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Gunakan nampan atau papan polos berwarna gelap atau kontras tanpa corak agar poligon udang terdeteksi presisi.
+            </p>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 font-bold text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
-              3
+          <div className="rounded-2xl border border-white/10 bg-[#0A1A2F]/60 p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-[#10B981] font-bold">
+              <Camera className="h-4 w-4 text-[#10B981]" />
+              <h4 className="font-heading text-sm text-white">3. Dilarang Memotong (No Crop)</h4>
             </div>
-            <div>
-              <h4 className="font-bold text-slate-900 dark:text-white">Dilarang Memotong (Crop) Gambar</h4>
-              <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                Sistem secara otomatis menyesuaikan resolusi gambar tanpa memotong piksel. Cropping manual akan merusak akurasi perhitungan luas piksel (area) & keliling (perimeter).
-              </p>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Unggah foto dalam rasio aspek asli. Cropping manual merusak kalibrasi rasio piksel terhadap ukuran aktual.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#0A1A2F]/60 p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-[#E8A33D] font-bold">
+              <Sun className="h-4 w-4 text-[#E8A33D]" />
+              <h4 className="font-heading text-sm text-white">4. Cahaya Cukup & Merata</h4>
             </div>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Pastikan pencahayaan cukup dan hindari pantulan silau atau bayangan gelap tubuh udang di atas alas.
+            </p>
           </div>
         </div>
 
         {/* DOs and DONTs */}
-        <div className="mt-6 grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px]">
-          <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/40">
-            <h5 className="flex items-center gap-1 font-bold text-emerald-900 dark:text-emerald-300 mb-1">
-              <Check className="h-4 w-4 text-emerald-600" /> Boleh dilakukan
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-5 border-t border-white/10 text-xs">
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-4">
+            <h5 className="flex items-center gap-2 font-bold text-emerald-300 mb-2 font-heading">
+              <Check className="h-4 w-4 text-emerald-400" /> Boleh Dilakukan
             </h5>
-            <ul className="space-y-1 text-emerald-800 dark:text-emerald-400">
-              <li>• Ambil foto dari kamera HP / Galeri</li>
-              <li>• Deteksi 1 udang atau banyak udang sekaligus</li>
-              <li>• Pastikan fokus jelas dan tidak terdistorsi</li>
+            <ul className="space-y-1.5 text-emerald-200/90 text-[11px]">
+              <li>• Mengambil foto lewat kamera HP atau galeri</li>
+              <li>• Deteksi satu ekor atau beberapa ekor sekaligus</li>
+              <li>• Pastikan fokus kamera tajam dan tidak kabur</li>
             </ul>
           </div>
 
-          <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-950/40">
-            <h5 className="flex items-center gap-1 font-bold text-rose-900 dark:text-rose-300 mb-1">
-              <AlertTriangle className="h-4 w-4 text-rose-600" /> Larangan Mutlak
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-950/30 p-4">
+            <h5 className="flex items-center gap-2 font-bold text-rose-300 mb-2 font-heading">
+              <AlertTriangle className="h-4 w-4 text-rose-400" /> Larangan Mutlak
             </h5>
-            <ul className="space-y-1 text-rose-800 dark:text-rose-400">
-              <li>• Jangan ubah rasio / crop bebas</li>
-              <li>• Jangan miringkan kamera dari 90°</li>
-              <li>• Jangan gunakan alas yang terlalu berbayang</li>
+            <ul className="space-y-1.5 text-rose-200/90 text-[11px]">
+              <li>• Dilarang memotong (crop) rasio foto</li>
+              <li>• Dilarang memiringkan sudut kamera dari 90°</li>
+              <li>• Dilarang menggunakan alas bermotif atau berbayang pekat</li>
             </ul>
           </div>
         </div>
 
+        {/* Final CTA Button */}
         <button
           onClick={onClose}
-          className="mt-6 w-full rounded-xl bg-[#0F4C81] py-3 text-xs font-bold text-white shadow-md hover:bg-[#0a3154] transition-colors"
+          className="mt-6 w-full rounded-full bg-[#E8A33D] hover:bg-[#D6922C] py-3.5 text-sm font-extrabold text-[#0A1A2F] shadow-lg hover:shadow-[0_0_20px_rgba(232,163,61,0.35)] transition-all min-h-[48px]"
         >
           Saya Mengerti, Tutup Panduan
         </button>
@@ -137,3 +164,4 @@ export function SopDialog({ isOpen, onClose }: SopDialogProps) {
     </div>
   );
 }
+

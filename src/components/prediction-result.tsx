@@ -1,23 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PredictSuccessResponse, ShrimpPrediction } from '@/lib/types';
+import { PredictSuccessResponse } from '@/lib/types';
 import { ProcessedImageResult } from '@/lib/exif-processor';
 import { saveScanResultToHistory } from '@/lib/storage';
 import { PolygonCanvas } from './polygon-canvas';
 import confetti from 'canvas-confetti';
 import {
-  Scale,
   Share2,
-  Copy,
   Check,
   RotateCcw,
-  Sparkles,
-  Info,
-  ChevronRight,
-  Layers,
-  Ruler,
-  Maximize2,
   BookmarkPlus,
   AlertTriangle,
 } from 'lucide-react';
@@ -46,7 +38,7 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
         particleCount: 25,
         spread: 50,
         origin: { y: 0.7 },
-        colors: ['#00F0FF', '#10B981', '#0F4C81'],
+        colors: ['#3B9FE8', '#E8A33D', '#FFFFFF'],
       });
 
       // Auto-save scan result to localStorage
@@ -67,9 +59,9 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
   }, [result, processedImage, total_detected, totalWeightGram, avgWeightGram, predictions]);
 
   const handleShare = async () => {
-    const textToShare = `[ShrimpWeightAI] Hasil Estimasi Berat Udang:\n- Total Terdeteksi: ${total_detected} udang\n- Total Berat: ${totalWeightGram.toFixed(
+    const textToShare = `[ShrimpWeightAI] Hasil Estimasi Berat Udang:\n: Total Terdeteksi: ${total_detected} udang\n: Total Berat: ${totalWeightGram.toFixed(
       2
-    )} gram\n- Rata-rata Berat: ${avgWeightGram.toFixed(2)} gram/udang`;
+    )} gram\n: Rata-rata Berat: ${avgWeightGram.toFixed(2)} gram/udang`;
 
     if (navigator.share) {
       try {
@@ -90,22 +82,22 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
   // STATE 1: EMPTY RESULT (0 shrimp detected)
   if (total_detected === 0) {
     return (
-      <div className="rounded-3xl border border-amber-200/80 bg-amber-50/50 p-8 text-center shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 mb-4">
+      <div className="rounded-[24px] border border-amber-500/30 bg-[#0F2440] p-8 sm:p-12 text-center shadow-xl">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/20 text-[#E8A33D] mb-4">
           <AlertTriangle className="h-8 w-8" />
         </div>
 
-        <h3 className="text-base font-bold text-amber-900 dark:text-amber-200">
+        <h3 className="text-xl font-extrabold text-white font-heading">
           Tidak Ada Udang Terdeteksi
         </h3>
-        <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 max-w-md mx-auto leading-relaxed">
-          Model segmentasi YOLOv8 tidak menemukan objek udang yang jelas. Pastikan posisi udang tidak tertutup, alas peletakan polos, dan kamera berada pada jarak <strong>29 cm</strong>.
+        <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+          Model segmentasi YOLOv8 tidak menemukan objek udang yang jelas. Pastikan posisi udang tidak tertutup, alas peletakan polos tanpa motif, dan kamera berada pada jarak tepat <strong className="text-white">29 cm</strong>.
         </p>
 
         <div className="mt-6">
           <button
             onClick={onReset}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#0F4C81] px-5 py-3 text-xs font-bold text-white shadow-md hover:bg-[#0a3154] transition-all"
+            className="inline-flex items-center gap-2 rounded-full bg-[#E8A33D] hover:bg-[#D6922C] px-8 py-3.5 text-xs font-extrabold text-[#0A1A2F] shadow-lg transition-all min-h-[44px]"
           >
             <RotateCcw className="h-4 w-4" />
             <span>Foto Ulang Dengan SOP 29cm</span>
@@ -119,51 +111,54 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
   return (
     <div className="space-y-6">
       {/* Top Banner & Main Prominent Weight Display */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F4C81] via-[#028090] to-[#05668D] p-6 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-[24px] border border-[#3B9FE8]/30 bg-gradient-to-r from-[#0F2440] via-[#0D2038] to-[#0A1A2F] p-6 sm:p-8 text-white shadow-2xl">
+        {/* Glow accent */}
+        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-[#3B9FE8]/10 blur-3xl" />
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold text-cyan-100 backdrop-blur-xs">
-                YOLOv8-Seg + SVR Model Active
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="rounded-full border border-[#3B9FE8]/30 bg-[#3B9FE8]/15 px-3 py-1 text-xs font-semibold text-[#3B9FE8]">
+                Model YOLOv8-Seg + SVR Aktif
               </span>
               {saved && (
-                <span className="flex items-center gap-1 text-[11px] text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300">
                   <BookmarkPlus className="h-3.5 w-3.5" /> Tersimpan ke Riwayat
                 </span>
               )}
             </div>
 
-            <h2 className="mt-3 text-xs font-medium uppercase tracking-wider text-cyan-200">
+            <h2 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-300 font-heading">
               {total_detected === 1 ? 'Estimasi Berat Udang' : `Total Estimasi (${total_detected} Udang)`}
             </h2>
 
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-black tracking-tight drop-shadow-sm">
+            <div className="mt-1 flex items-baseline gap-3">
+              <span className="text-4xl sm:text-6xl font-black tracking-tight text-[#E8A33D] font-heading drop-shadow-md">
                 {totalWeightGram.toFixed(2)}
               </span>
-              <span className="text-xl font-bold text-cyan-200">gram</span>
+              <span className="text-2xl font-bold text-slate-300">gram</span>
             </div>
 
             {total_detected > 1 && (
-              <p className="mt-2 text-xs text-cyan-100">
-                Rata-rata: <strong>{avgWeightGram.toFixed(2)} gram</strong> / ekor
+              <p className="mt-2 text-xs sm:text-sm text-slate-300">
+                Rata-rata: <strong className="text-white">{avgWeightGram.toFixed(2)} gram</strong> / ekor
               </p>
             )}
           </div>
 
-          {/* Actions */}
+          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleShare}
-              className="inline-flex items-center gap-2 rounded-xl bg-white/20 hover:bg-white/30 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-md transition-all border border-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 px-5 py-3 text-xs font-bold text-white backdrop-blur-md transition-all min-h-[44px]"
             >
-              {copied ? <Check className="h-4 w-4 text-emerald-300" /> : <Share2 className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4 text-[#3B9FE8]" />}
               <span>{copied ? 'Tersalin!' : 'Bagikan Hasil'}</span>
             </button>
 
             <button
               onClick={onReset}
-              className="inline-flex items-center gap-2 rounded-xl bg-white text-[#0F4C81] px-4 py-2.5 text-xs font-bold shadow-md hover:bg-slate-100 transition-all"
+              className="inline-flex items-center gap-2 rounded-full bg-[#E8A33D] hover:bg-[#D6922C] text-[#0A1A2F] px-6 py-3 text-xs font-extrabold shadow-lg hover:shadow-[0_0_20px_rgba(232,163,61,0.35)] transition-all min-h-[44px]"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Pindai Foto Lain</span>
@@ -176,12 +171,12 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Polygon Canvas Visualizer (7 cols) */}
         <div className="lg:col-span-7">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="rounded-[24px] border border-white/10 bg-[#0F2440] p-5 sm:p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-300 font-heading">
                 Visualisasi Overlay Segmentasi Poligon
               </h3>
-              <span className="text-[11px] font-semibold text-[#028090]">
+              <span className="rounded-full bg-[#3B9FE8]/20 border border-[#3B9FE8]/40 px-3 py-0.5 text-xs font-bold text-[#3B9FE8]">
                 {total_detected} Objek
               </span>
             </div>
@@ -195,7 +190,7 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
               onSelectPrediction={setSelectedId}
             />
 
-            <p className="mt-3 text-[11px] text-slate-400 leading-relaxed">
+            <p className="mt-3 text-xs text-slate-400 leading-relaxed">
               * Koordinat poligon disesuaikan otomatis dari piksel asli foto tanpa distorsi aspek rasio.
             </p>
           </div>
@@ -203,8 +198,8 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
 
         {/* Right Column: Shrimp Extracted Features Table (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+          <div className="rounded-[24px] border border-white/10 bg-[#0F2440] p-5 sm:p-6 shadow-xl">
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-300 font-heading mb-4">
               Rincian Objek & Fitur Geometri
             </h3>
 
@@ -217,33 +212,33 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
                     onClick={() => setSelectedId(isSelected ? null : pred.id)}
                     className={`cursor-pointer rounded-2xl border p-4 transition-all ${
                       isSelected
-                        ? 'border-[#028090] bg-cyan-50/80 ring-2 ring-[#028090]/40 dark:bg-cyan-950/40'
-                        : 'border-slate-100 bg-slate-50/60 hover:bg-slate-100/80 dark:border-slate-800 dark:bg-slate-800/40'
+                        ? 'border-[#E8A33D] bg-[#E8A33D]/10 ring-2 ring-[#E8A33D]/40'
+                        : 'border-white/10 bg-[#0A1A2F]/60 hover:border-[#3B9FE8]/40 hover:bg-[#0A1A2F]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#0F4C81] text-xs font-bold text-white">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#3B9FE8] text-xs font-black text-[#0A1A2F]">
                           #{pred.id}
                         </span>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <span className="text-xs sm:text-sm font-bold text-white">
                           Udang Objek #{pred.id}
                         </span>
                       </div>
 
-                      <span className="text-base font-extrabold text-[#0F4C81] dark:text-cyan-400">
+                      <span className="text-base sm:text-lg font-black text-[#E8A33D] font-heading">
                         {pred.berat_gram.toFixed(2)} g
                       </span>
                     </div>
 
-                    {/* Extracted Features List Dynamic */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px]">
+                    {/* Extracted Features List */}
+                    <div className="mt-3 grid grid-cols-2 gap-2 pt-3 border-t border-white/10 text-xs">
                       {Object.entries(pred.features_extracted).map(([key, val]) => (
                         <div key={key} className="flex flex-col">
-                          <span className="text-slate-400 uppercase text-[9px] font-semibold tracking-wider">
+                          <span className="text-slate-400 uppercase text-[10px] font-semibold tracking-wider">
                             {key}
                           </span>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
+                          <span className="font-mono font-bold text-white">
                             {typeof val === 'number' ? val.toFixed(1) : val || '-'}
                           </span>
                         </div>
@@ -257,19 +252,19 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
 
           {/* Model Metadata */}
           {result.meta && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[11px] text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-              <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+            <div className="rounded-[20px] border border-white/10 bg-[#0A1A2F]/80 p-4 text-xs text-slate-300">
+              <h4 className="font-bold text-white mb-2 font-heading">
                 Metadata Model Inferensi Backend
               </h4>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                 <div>
-                  Waktu Proses: <strong>{result.meta.processing_time_ms || '-'} ms</strong>
+                  Waktu Proses: <strong className="text-white">{result.meta.processing_time_ms || '-'} ms</strong>
                 </div>
                 <div>
-                  YOLO Version: <strong>{result.meta.model_yolo_version || '-'}</strong>
+                  YOLO Version: <strong className="text-white">{result.meta.model_yolo_version || '-'}</strong>
                 </div>
                 <div className="col-span-2">
-                  SVR Combination: <strong>{result.meta.model_svr_combination || '-'}</strong>
+                  SVR Combination: <strong className="text-[#3B9FE8]">{result.meta.model_svr_combination || '-'}</strong>
                 </div>
               </div>
             </div>
@@ -279,3 +274,4 @@ export function PredictionResult({ result, processedImage, onReset }: Prediction
     </div>
   );
 }
+

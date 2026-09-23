@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { SopDialog } from '@/components/sop-dialog';
@@ -11,15 +12,26 @@ export default function HistoryPage() {
   const [isSopOpen, setIsSopOpen] = useState<boolean>(false);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#0A1A2F] text-white">
       <Navbar
         useMock={useMock}
         onToggleMock={setUseMock}
         onOpenSop={() => setIsSopOpen(true)}
       />
 
-      <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+      <main className="flex-1 relative overflow-hidden">
+        {/* Subtle Water Ripple Background Overlay */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-96 opacity-25 select-none overflow-hidden">
+          <Image
+            src="/assets/water-ripple.svg"
+            alt="Water ripple texture"
+            fill
+            sizes="100vw"
+            className="object-cover object-top"
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-10">
           <ScanHistory />
         </div>
       </main>
@@ -30,3 +42,4 @@ export default function HistoryPage() {
     </div>
   );
 }
+

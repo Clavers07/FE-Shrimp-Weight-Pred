@@ -15,19 +15,19 @@ export function Navbar({ useMock, onToggleMock, onOpenSop }: NavbarProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-40 w-full border-b border-sky-200 bg-white/95 backdrop-blur-md shadow-sm">
+      <div className="mx-auto flex h-16 sm:h-20 max-w-6xl items-center justify-between px-3 sm:px-6 gap-2">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#0F4C81] to-[#028090] text-white shadow-md shadow-cyan-900/20">
-            <Waves className="h-5 w-5" />
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0 transition-opacity hover:opacity-90">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0EA5E9] to-[#0369A1] shadow-md shadow-sky-200">
+            <Waves className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div>
-            <span className="block text-base font-bold tracking-tight text-slate-900 dark:text-white">
-              ShrimpWeight<span className="text-[#028090] dark:text-cyan-400">AI</span>
+            <span className="block text-base sm:text-lg font-extrabold tracking-tight text-[#0C4A6E] font-heading leading-tight">
+              ShrimpWeight<span className="text-[#0EA5E9]">AI</span>
             </span>
-            <span className="block text-[10px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
-              Estimator Jarak 29cm
+            <span className="hidden sm:block text-[10px] font-semibold tracking-wider text-sky-400 uppercase">
+              Jarak Presisi 29 cm
             </span>
           </div>
         </Link>
@@ -36,43 +36,47 @@ export function Navbar({ useMock, onToggleMock, onOpenSop }: NavbarProps) {
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold sm:text-sm transition-colors ${
+            className={`flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-all min-h-[44px] ${
               pathname === '/'
-                ? 'bg-slate-100 text-[#0F4C81] dark:bg-slate-800 dark:text-cyan-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                ? 'bg-[#0EA5E9] text-white shadow-[0_0_16px_rgba(14,165,233,0.35)]'
+                : 'text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9]'
             }`}
+            title="Estimasi"
           >
-            <Scale className="h-4 w-4" />
-            <span>Estimasi</span>
+            <Scale className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Estimasi</span>
           </Link>
 
           <Link
             href="/history"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold sm:text-sm transition-colors ${
+            className={`flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-all min-h-[44px] ${
               pathname === '/history'
-                ? 'bg-slate-100 text-[#0F4C81] dark:bg-slate-800 dark:text-cyan-400'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                ? 'bg-[#0EA5E9] text-white shadow-[0_0_16px_rgba(14,165,233,0.35)]'
+                : 'text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9]'
             }`}
+            title="Riwayat"
           >
-            <History className="h-4 w-4" />
-            <span>Riwayat</span>
+            <History className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Riwayat</span>
           </Link>
 
           <button
             onClick={onOpenSop}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold sm:text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
-            title="Lihat SOP Kamera 29cm"
+            className="flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-[#334155] hover:bg-sky-50 hover:text-[#0EA5E9] transition-all min-h-[44px]"
+            title="Lihat SOP Pemotretan 29 cm"
           >
-            <HelpCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <HelpCircle className="h-4 w-4 shrink-0 text-[#F59E0B]" />
             <span className="hidden sm:inline">SOP 29cm</span>
           </button>
         </nav>
 
-        {/* Server Status & Mock Toggle */}
-        <div className="flex items-center gap-2">
+        {/* Server Status & Mock Toggle Switch */}
+        <div className="flex items-center shrink-0">
           <ServerStatusBadge useMock={useMock} onToggleMock={onToggleMock} />
         </div>
       </div>
     </header>
   );
 }
+
+
