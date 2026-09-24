@@ -1,0 +1,76 @@
+.capture { min-width: 0; height: 100%; color: var(--forest); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.dropzone, .waiting, .errorPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 390px;
+  height: 100%;
+  padding: 40px 24px;
+  border: 1px dashed #a7b59e;
+  border-radius: 4px;
+  background: #fafbf6;
+  text-align: center;
+}
+.dropzone { transition: background 160ms, border-color 160ms; }
+.dragging { border: 2px dashed var(--forest); background: #edf3df; }
+.uploadIcon { width: 42px; height: 42px; margin-bottom: 26px; color: #667e59; }
+.title { max-width: 100%; font-size: 20px; line-height: 1.4; font-weight: 500; letter-spacing: -0.04em; }
+.description { max-width: 360px; margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.actions, .previewActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; }
+.primaryButton, .secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 12px 20px;
+  border: 1px solid var(--forest);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 160ms;
+}
+.primaryButton { background: var(--forest); color: var(--paper); }
+.primaryButton:hover { background: var(--forest-hover); }
+.secondaryButton { background: transparent; color: var(--forest); border-color: #bac5b2; }
+.secondaryButton:hover { background: var(--sage); }
+.fileHint { max-width: 320px; margin-top: 22px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+.fileHint span { margin-inline: 5px; }
+.waiting { border-style: solid; border-color: var(--line); }
+.spinner { margin-bottom: 24px; color: #667e59; animation: spin 1s linear infinite; }
+.cancelButton { min-height: 44px; margin-top: 24px; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+.preview { padding: 24px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+.previewHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.fileInfo { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.fileInfo > div { min-width: 0; }
+.previewTitle { font-size: 14px; font-weight: 600; }
+.filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.iconButton { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; }
+.iconButton:hover { background: var(--sage); }
+.previewFrame { display: flex; justify-content: center; overflow: hidden; border: 1px solid var(--line); border-radius: 3px; background: #edf0e6; }
+.previewImage { display: block; width: 100%; max-height: 420px; object-fit: contain; }
+.photoDetails { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 10px; }
+.photoDetails > span { display: inline-flex; align-items: center; gap: 6px; }
+.resizeNote { margin-top: 12px; padding: 10px 12px; background: var(--sage); color: var(--muted); font-size: 11px; }
+.previewReminder { margin-top: 18px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+.previewActions { justify-content: flex-start; margin-top: 18px; }
+.errorPanel { border-style: solid; border-color: #d9c2b6; background: #fcf8f2; }
+.errorIcon { margin-bottom: 22px; color: #9a5946; }
+.errorMessage { max-width: 380px; margin-top: 12px; color: #79584b; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.requestId { max-width: 100%; margin-top: 22px; color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .dropzone, .waiting, .errorPanel { min-height: 340px; padding: 32px 18px; }
+  .title { font-size: 18px; }
+  .preview { padding: 18px; }
+  .actions, .previewActions { width: 100%; gap: 10px; }
+  .primaryButton, .secondaryButton { flex: 1 1 auto; padding-inline: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}
