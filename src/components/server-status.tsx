@@ -1,108 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { checkServerHealth } from '@/lib/api';
-import { HealthCheckResponse } from '@/lib/types';
-import { Server, RefreshCw, Cpu } from 'lucide-react';
+import type { HealthCheckResponse } from '@/lib/types';
 
-interface ServerStatusBadgeProps {
-  useMock: boolean;
-  onToggleMock: (val: boolean) => void;
-}
-
-export function ServerStatusBadge({ useMock, onToggleMock }: ServerStatusBadgeProps) {
+export function ServerStatusBadge({ useMock, onToggleMock }: { useMock: boolean; onToggleMock: (value: boolean) => void }) {
   const [health, setHealth] = useState<HealthCheckResponse>({ status: 'checking', model_ready: false });
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const refreshHealth = async () => {
+  const [loading, setLoading] = useState(false);
+  const mounted = useRef(false);
+  const pending = useRef(false);
+  const refresh = useCallback(async () => {
+    if (pending.current) return;
+    pending.current = true;
     setLoading(true);
-    const res = await checkServerHealth();
-    setHealth(res);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    refreshHealth();
-    const interval = setInterval(refreshHealth, 30000);
-    return () => clearInterval(interval);
+    try {
+      const result = await checkServerHealth();
+      if (mounted.current) setHealth(result);
+    } finally {
+      pending.current = false;
+      if (mounted.current) setLoading(false);
+    }
   }, []);
 
-  const isOnline = health.status === 'online';
-  const isDegraded = health.status === 'degraded';
+  useEffect(() => {
+    mounted.current = true;
+    void refresh();
+    const interval = setInterval(() => void refresh(), 30000);
+    return () => { mounted.current = false; clearInterval(interval); };
+  }, [refresh]);
 
+  const label = health.status === 'checking' ? 'Memeriksa server' : health.status === 'online' ? 'Server terhubung' : health.status === 'degraded' ? 'Model disiapkan' : 'Server belum terhubung';
   return (
-    <div className="flex items-center gap-2.5">
-      {/* API Health Status Pill */}
-      <div
-        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-md transition-all ${
-          isOnline
-            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-            : isDegraded
-            ? 'border-amber-300 bg-amber-50 text-amber-700'
-            : 'border-rose-300 bg-rose-50 text-rose-700'
-        }`}
-      >
-        <span className="relative flex h-2 w-2">
-          <span
-            className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-              isOnline ? 'bg-emerald-400' : isDegraded ? 'bg-amber-400' : 'bg-rose-400'
-            }`}
-          />
-          <span
-            className={`relative inline-flex h-2 w-2 rounded-full ${
-              isOnline ? 'bg-emerald-400' : isDegraded ? 'bg-amber-400' : 'bg-rose-400'
-            }`}
-          />
-        </span>
-
-        <span className="font-medium tracking-wide">
-          {isOnline ? 'API Ready' : isDegraded ? 'Model Loading' : 'API Offline'}
-        </span>
-
-        <button
-          onClick={refreshHealth}
-          disabled={loading}
-          className="ml-0.5 text-[#64748B] hover:text-[#0C4A6E] disabled:opacity-40 transition-colors p-0.5 rounded-full hover:bg-sky-50"
-          title="Cek ulang status server API"
-          aria-label="Refresh server status"
-        >
-          <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-
-      {/* Modern Mock Switch Component */}
-      <label
-        htmlFor="mock-toggle-switch"
-        className={`group flex items-center gap-2 cursor-pointer select-none rounded-full border px-3 py-1.5 text-xs font-semibold transition-all min-h-[40px] sm:min-h-[44px] ${
-          useMock
-            ? 'border-[#F59E0B] bg-[#F59E0B]/15 text-[#D97706] shadow-[0_0_16px_rgba(245,158,11,0.2)]'
-            : 'border-sky-200 bg-white text-[#334155] hover:border-sky-300'
-        }`}
-        title="Aktifkan simulasi respon mock jika server API offline"
-      >
-        <Cpu className={`h-3.5 w-3.5 transition-colors ${useMock ? 'text-[#F59E0B]' : 'text-slate-400'}`} />
-        <span className="hidden sm:inline font-medium">Mode Mock</span>
-
-        {/* Physical toggle slider */}
-        <div className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-sky-100 p-0.5 transition-colors duration-200 ease-in-out">
-          <input
-            id="mock-toggle-switch"
-            type="checkbox"
-            checked={useMock}
-            onChange={(e) => onToggleMock(e.target.checked)}
-            className="sr-only"
-            aria-label="Toggle Mock API"
-          />
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full transition-transform duration-200 ease-in-out ${
-              useMock
-                ? 'translate-x-4 bg-[#F59E0B] shadow-sm'
-                : 'translate-x-0 bg-sky-300'
-            }`}
-          />
-        </div>
-      </label>
+    <div className="server-controls">
+      <div className={`server-health ${health.status}`}><span className="status-dot" /><span role="status">{label}</span><button onClick={() => void refresh()} disabled={loading} aria-label="Periksa kembali koneksi server" title="Periksa kembali koneksi server"><RefreshCw size={13} className={loading ? 'animate-spin' : ''} /></button></div>
+      <label className="demo-toggle"><span>Simulasi</span><input type="checkbox" checked={useMock} onChange={event => onToggleMock(event.target.checked)} aria-label="Mode simulasi" /><span className="toggle-track" aria-hidden="true"><span /></span></label>
     </div>
   );
 }
-
