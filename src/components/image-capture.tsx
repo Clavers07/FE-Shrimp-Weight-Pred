@@ -1,21 +1,12 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
-import { processShrimpImage, ProcessedImageResult } from '@/lib/exif-processor';
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { processShrimpImage, type ProcessedImageResult } from '@/lib/exif-processor';
 import { uploadShrimpImage } from '@/lib/api';
-import { PredictResult } from '@/lib/types';
+import { type ErrorCode, type PredictResult } from '@/lib/types';
 import { formatErrorCode, formatBytes } from '@/lib/utils';
-import {
-  Camera,
-  Upload,
-  RefreshCw,
-  XCircle,
-  AlertCircle,
-  FileImage,
-  Info,
-  Sparkles,
-  RotateCcw,
-} from 'lucide-react';
+import { AlertCircle, Camera, Check, FileImage, LoaderCircle, RotateCcw, ScanLine, Upload, X } from 'lucide-react';
+import styles from './image-capture.module.css';
 
 interface ImageCaptureProps {
   useMock: boolean;
@@ -24,310 +15,262 @@ interface ImageCaptureProps {
 }
 
 type UiState = 'idle' | 'processing_exif' | 'previewing' | 'uploading' | 'error';
+type CaptureError = { code: ErrorCode; message?: string; requestId?: string };
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
 export function ImageCapture({ useMock, onSuccess, onReset }: ImageCaptureProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const processingIdRef = useRef(0);
+  const previewUrlRef = useRef<string | null>(null);
+  const dragDepthRef = useRef(0);
+  const stateHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const [uiState, setUiState] = useState<UiState>('idle');
   const [processedData, setProcessedData] = useState<ProcessedImageResult | null>(null);
-  const [errorDetails, setErrorDetails] = useState<{ code?: string; message?: string; requestId?: string } | null>(
-    null
-  );
+  const [errorDetails, setErrorDetails] = useState<CaptureError | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const abortControllerRef = useRef<AbortController | null>(null);
+  useEffect(() => () => {
+    processingIdRef.current += 1;
+    abortControllerRef.current?.abort();
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  useEffect(() => {
+    if (uiState === 'previewing' || uiState === 'error') {
+      stateHeadingRef.current?.focus({ preventScroll: true });
+    }
+  }, [uiState]);
 
-    const rawFile = files[0];
-    setUiState('processing_exif');
+  const clearPreview = () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
+    setProcessedData(null);
+  };
+
+  const handleFile = async (rawFile: File) => {
+    const processingId = ++processingIdRef.current;
+    clearPreview();
     setErrorDetails(null);
+    setIsDragging(false);
+    dragDepthRef.current = 0;
+
+    if (!ACCEPTED_TYPES.includes(rawFile.type.toLowerCase()) &&
+        !(rawFile.type === '' && /\.(jpe?g|png)$/i.test(rawFile.name))) {
+      setErrorDetails({ code: 'UNSUPPORTED_TYPE', message: 'Foto ini belum didukung. Pilih file JPG atau PNG.' });
+      setUiState('error');
+      return;
+    }
+
+    if (rawFile.size === 0) {
+      setErrorDetails({ code: 'EMPTY_FILE', message: 'File foto kosong. Pilih foto lain dari perangkat Anda.' });
+      setUiState('error');
+      return;
+    }
+
+    setUiState('processing_exif');
 
     try {
       const processed = await processShrimpImage(rawFile);
+      if (processingId !== processingIdRef.current) {
+        URL.revokeObjectURL(processed.previewUrl);
+        return;
+      }
+      if (processed.file.size > MAX_UPLOAD_BYTES) {
+        URL.revokeObjectURL(processed.previewUrl);
+        setErrorDetails({
+          code: 'FILE_TOO_LARGE',
+          message: `Ukuran foto masih ${formatBytes(processed.file.size)} setelah disesuaikan. Pilih foto dengan ukuran maksimal 15 MB.`,
+        });
+        setUiState('error');
+        return;
+      }
+      previewUrlRef.current = processed.previewUrl;
       setProcessedData(processed);
       setUiState('previewing');
-    } catch (err) {
-      console.error('[Capture] Error processing image EXIF:', err);
-      setErrorDetails({
-        message: 'Gagal memproses file gambar. Pastikan file gambar tidak korup.',
-      });
+    } catch {
+      if (processingId !== processingIdRef.current) return;
+      setErrorDetails({ code: 'INVALID_IMAGE', message: 'Foto tidak dapat dibaca. Coba pilih foto lain atau ambil ulang dengan kamera.' });
       setUiState('error');
     }
   };
 
-  const handleStartSubmit = async () => {
-    if (!processedData) return;
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const rawFile = event.target.files?.[0];
+    event.target.value = '';
+    if (rawFile) void handleFile(rawFile);
+  };
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    dragDepthRef.current = 0;
+    setIsDragging(false);
+    if (event.dataTransfer.files.length > 1) {
+      setErrorDetails({ code: 'INVALID_IMAGE', message: 'Pilih satu foto untuk setiap analisis. Satu foto dapat memuat beberapa udang.' });
+      setUiState('error');
+      return;
     }
+    const rawFile = event.dataTransfer.files[0];
+    if (rawFile) void handleFile(rawFile);
+  };
 
+  const handleStartSubmit = async () => {
+    if (!processedData || abortControllerRef.current) return;
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     setUiState('uploading');
     setErrorDetails(null);
 
     try {
-      const res = await uploadShrimpImage(processedData.file, controller.signal, {
-        useMock,
-      });
-
-      if (res.ok) {
-        setUiState('idle');
-        onSuccess(res, processedData);
+      const result = await uploadShrimpImage(processedData.file, controller.signal, { useMock });
+      // A cancelled request may still resolve; only the current request owns this view.
+      if (controller.signal.aborted || abortControllerRef.current !== controller) return;
+      if (result.ok) {
+        previewUrlRef.current = null;
+        onSuccess(result, processedData);
       } else {
-        setErrorDetails({
-          code: res.error_code,
-          message: res.message,
-          requestId: res.requestId,
-        });
+        setErrorDetails({ code: result.error_code, message: result.message, requestId: result.requestId });
         setUiState('error');
       }
-    } catch (err) {
-      console.error('[Upload] Error submitting image:', err);
-      setErrorDetails({
-        code: 'NETWORK_ERROR',
-        message: 'Koneksi ke server terputus.',
-      });
+    } catch {
+      if (controller.signal.aborted || abortControllerRef.current !== controller) return;
+      setErrorDetails({ code: 'NETWORK_ERROR', message: 'Koneksi terputus. Periksa jaringan Anda, lalu coba analisis kembali.' });
       setUiState('error');
+    } finally {
+      if (abortControllerRef.current === controller) abortControllerRef.current = null;
     }
   };
 
   const handleCancelUpload = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     setUiState('previewing');
   };
 
   const handleRetake = () => {
-    if (processedData?.previewUrl) {
-      URL.revokeObjectURL(processedData.previewUrl);
-    }
-    setProcessedData(null);
+    processingIdRef.current += 1;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    clearPreview();
     setErrorDetails(null);
     setUiState('idle');
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
     onReset();
   };
 
+  const mappedError = errorDetails ? formatErrorCode(errorDetails.code) : null;
+  const statusText = uiState === 'processing_exif'
+    ? 'Menyiapkan foto.'
+    : uiState === 'uploading'
+      ? 'Analisis foto sedang berlangsung.'
+      : uiState === 'previewing'
+        ? 'Foto siap. Periksa foto sebelum memulai analisis.'
+        : '';
+
   return (
-    <div className="w-full">
-      {/* Hidden Native File Inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/jpg"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+    <div className={styles.capture}>
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" hidden onChange={handleFileChange} aria-label="Pilih foto udang" />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFileChange} aria-label="Ambil foto udang" />
+      <p className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">{statusText}</p>
 
-      {/* STATE 1: IDLE */}
       {uiState === 'idle' && (
-        <div className="rounded-[24px] border-2 border-dashed border-sky-300 bg-white hover:border-[#0EA5E9] p-8 sm:p-12 text-center shadow-[0_4px_24px_rgba(14,165,233,0.10)] transition-all group">
-          {/* Custom Camera Icon with Marine Navy and Amber Accent */}
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-[#F0F9FF] border border-sky-200 text-[#0284C7] shadow-sm mb-5 group-hover:scale-105 transition-transform">
-            <Camera className="h-10 w-10 text-[#0EA5E9]" />
-          </div>
-
-          <h3 className="text-xl sm:text-2xl font-extrabold text-[#0C4A6E] font-heading">
-            Pilih atau Ambil Foto Udang
-          </h3>
-          <p className="mt-2 text-xs sm:text-sm text-[#475569] max-w-lg mx-auto leading-relaxed">
-            Posisikan kamera HP tegak lurus pada jarak tepat <strong className="text-[#0C4A6E]">29 cm</strong> di atas permukaan alas udang. Format didukung: JPG, JPEG, PNG.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* Primary button: Gunakan Kamera HP with Coral/Amber CTA */}
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-[#EA580C] hover:bg-[#C2410C] px-8 py-3.5 text-sm font-extrabold text-white shadow-md hover:shadow-lg transition-all min-h-[48px]"
-            >
-              <Camera className="h-4 w-4" />
-              <span>Gunakan Kamera HP</span>
-            </button>
-
-            {/* Secondary button: Pilih Dari Galeri with Ocean Outline */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full border-2 border-[#0EA5E9] bg-white hover:bg-sky-50 px-8 py-3.5 text-sm font-extrabold text-[#0284C7] transition-all min-h-[48px]"
-            >
-              <Upload className="h-4 w-4 text-[#0EA5E9]" />
-              <span>Pilih Dari Galeri</span>
+        <div
+          className={`${styles.dropzone} ${isDragging ? styles.dragging : ''}`}
+          onDragEnter={(event) => {
+            event.preventDefault();
+            if (event.dataTransfer.types.includes('Files')) {
+              dragDepthRef.current += 1;
+              setIsDragging(true);
+            }
+          }}
+          onDragLeave={(event) => {
+            event.preventDefault();
+            dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+            if (dragDepthRef.current === 0) setIsDragging(false);
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={handleDrop}
+        >
+          <Upload className={styles.uploadIcon} strokeWidth={1.25} aria-hidden="true" />
+          <h3 className={styles.title}>{isDragging ? 'Lepaskan foto untuk melanjutkan' : 'Tarik foto udang ke sini'}</h3>
+          <p className={styles.description}>atau pilih foto dari perangkat Anda</p>
+          <div className={styles.actions}>
+            <button type="button" className={styles.primaryButton} onClick={() => fileInputRef.current?.click()}>Pilih foto</button>
+            <button type="button" className={styles.secondaryButton} onClick={() => cameraInputRef.current?.click()}>
+              <Camera size={17} aria-hidden="true" /> Buka kamera
             </button>
           </div>
+          <p className={styles.fileHint}>JPG atau PNG <span aria-hidden="true">·</span> Foto di atas 15 MB disesuaikan otomatis</p>
         </div>
       )}
 
-      {/* STATE 2: PROCESSING EXIF & RESIZE */}
       {uiState === 'processing_exif' && (
-        <div className="rounded-[24px] border border-sky-200 bg-white p-10 text-center shadow-[0_4px_24px_rgba(14,165,233,0.10)]">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-[#0EA5E9] border border-sky-200 mb-4">
-            <RefreshCw className="h-8 w-8 animate-spin text-[#0EA5E9]" />
-          </div>
-          <p className="text-base font-bold text-[#0C4A6E] font-heading">
-            Mengoreksi Orientasi EXIF & Resolusi Piksel...
-          </p>
-          <p className="mt-1.5 text-xs text-[#475569] max-w-md mx-auto">
-            Memastikan orientasi foto sesuai sensor kamera asli tanpa mengubah rasio aspek 100%.
-          </p>
+        <div className={styles.waiting} aria-busy="true">
+          <LoaderCircle className={styles.spinner} size={36} strokeWidth={1.5} aria-hidden="true" />
+          <h3 className={styles.title}>Menyiapkan foto Anda</h3>
+          <p className={styles.description}>Sebentar, kami sedang memeriksa orientasi dan ukuran foto.</p>
         </div>
       )}
 
-      {/* STATE 3: PREVIEWING */}
       {uiState === 'previewing' && processedData && (
-        <div className="rounded-[24px] border border-sky-200 bg-white p-6 sm:p-8 shadow-[0_4px_24px_rgba(14,165,233,0.10)]">
-          <div className="flex items-center justify-between mb-5 pb-4 border-b border-sky-100">
-            <div className="flex items-center gap-2.5">
-              <FileImage className="h-5 w-5 text-[#0EA5E9]" />
-              <h4 className="text-sm sm:text-base font-extrabold text-[#0C4A6E] font-heading">
-                Pratinjau Foto Sebelum Analisis
-              </h4>
-            </div>
-
-            <button
-              onClick={handleRetake}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 min-h-[36px] px-2 transition-colors"
-            >
-              <XCircle className="h-4 w-4" />
-              <span>Ambil Ulang</span>
-            </button>
-          </div>
-
-          {/* Preview Frame */}
-          <div className="relative mx-auto max-h-[420px] overflow-hidden rounded-[20px] bg-[#F8FAFC] flex items-center justify-center border border-sky-200 p-2 shadow-inner">
-            {/* eslint-disable-next-html-element */}
-            <img
-              src={processedData.previewUrl}
-              alt="Pratinjau foto udang"
-              className="max-h-[390px] w-auto object-contain rounded-xl"
-            />
-          </div>
-
-          {/* Resized notification if applied */}
-          {processedData.wasResized && (
-            <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-              <Info className="h-4 w-4 shrink-0 text-[#EA580C] mt-0.5" />
-              <span>
-                Ukuran file awal <strong>{formatBytes(processedData.originalSizeBytes)}</strong> disesuaikan secara proporsional menjadi{' '}
-                <strong>{formatBytes(processedData.processedSizeBytes)}</strong> ({processedData.processedDimensions.width}×{processedData.processedDimensions.height}px) agar proses inferensi lebih efisien di lapangan.
-              </span>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
-            <button
-              onClick={handleStartSubmit}
-              className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#EA580C] hover:bg-[#C2410C] py-3.5 px-6 text-sm font-extrabold text-white shadow-md hover:shadow-lg transition-all min-h-[48px]"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>Mulai Analisis & Estimasi Berat</span>
-            </button>
-
-            <button
-              onClick={handleRetake}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-sky-300 bg-white hover:bg-sky-50 py-3.5 px-6 text-xs font-bold text-[#0C4A6E] transition-all min-h-[48px]"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>Ganti Foto</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STATE 4: UPLOADING & COMPUTING */}
-      {uiState === 'uploading' && (
-        <div className="rounded-[24px] border border-sky-200 bg-white p-10 text-center shadow-[0_4px_24px_rgba(14,165,233,0.10)]">
-          <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-sky-50 border border-sky-200 text-[#0EA5E9] shadow-sm mb-5">
-            <RefreshCw className="h-9 w-9 animate-spin text-[#0EA5E9]" />
-          </div>
-
-          <h3 className="text-lg sm:text-xl font-extrabold text-[#0C4A6E] font-heading">
-            Mengirim Gambar & Memproses Inferensi AI...
-          </h3>
-          <p className="mt-2 text-xs sm:text-sm text-[#475569] max-w-md mx-auto">
-            Model YOLOv26-Seg sedang mengekstrak poligon dan model SVR mengestimasi gramatur udang.
-          </p>
-
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={handleCancelUpload}
-              className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors min-h-[44px]"
-            >
-              <XCircle className="h-4 w-4" />
-              <span>Batalkan Pengunggahan</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STATE 5: ERROR STATE */}
-      {uiState === 'error' && errorDetails && (
-        <div className="rounded-[24px] border border-rose-200 bg-white p-6 sm:p-8 shadow-[0_4px_24px_rgba(244,63,94,0.10)]">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 border border-rose-200 text-rose-600">
-              <AlertCircle className="h-6 w-6" />
-            </div>
-
-            <div className="flex-1">
-              {(() => {
-                const mapped = formatErrorCode(
-                  (errorDetails.code as any) || 'UNKNOWN_ERROR'
-                );
-                return (
-                  <>
-                    <h4 className="text-base font-extrabold text-[#0C4A6E] font-heading">
-                      {mapped.title}
-                    </h4>
-                    <p className="mt-1.5 text-xs sm:text-sm text-[#475569]">
-                      {errorDetails.message || mapped.message}
-                    </p>
-                    <p className="mt-3 text-xs font-semibold text-rose-600">
-                      Petunjuk: {mapped.action}
-                    </p>
-                  </>
-                );
-              })()}
-
-              {errorDetails.requestId && (
-                <div className="mt-4 flex items-center gap-2 text-[11px] text-[#64748B]">
-                  <span>Log Request ID:</span>
-                  <code className="rounded-lg bg-sky-50 px-2 py-0.5 font-mono text-[#0284C7] border border-sky-200">
-                    {errorDetails.requestId}
-                  </code>
-                </div>
-              )}
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={handleRetake}
-                  className="rounded-full bg-[#EA580C] hover:bg-[#C2410C] px-6 py-2.5 text-xs font-extrabold text-white transition-colors min-h-[44px]"
-                >
-                  Ambil Ulang Foto
-                </button>
+        <div className={styles.preview}>
+          <div className={styles.previewHeader}>
+            <div className={styles.fileInfo}>
+              <FileImage size={20} aria-hidden="true" />
+              <div>
+                <h3 ref={stateHeadingRef} tabIndex={-1} className={styles.previewTitle}>Foto siap dianalisis</h3>
+                <p className={styles.filename} title={processedData.file.name}>{processedData.file.name}</p>
               </div>
             </div>
+            <button type="button" className={styles.iconButton} onClick={handleRetake} aria-label="Hapus foto dan pilih ulang"><X size={19} aria-hidden="true" /></button>
           </div>
+          <div className={styles.previewFrame}>
+            {/* The preview is a local object URL and must retain its original dimensions. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={processedData.previewUrl} alt="Pratinjau foto udang yang akan dianalisis" className={styles.previewImage} />
+          </div>
+          <div className={styles.photoDetails}>
+            <span><Check size={14} aria-hidden="true" /> {processedData.processedDimensions.width} × {processedData.processedDimensions.height} px</span>
+            <span>{formatBytes(processedData.processedSizeBytes)}</span>
+          </div>
+          {processedData.wasResized && <p className={styles.resizeNote}>Foto disesuaikan dari {formatBytes(processedData.originalSizeBytes)} menjadi {formatBytes(processedData.processedSizeBytes)} agar dapat diunggah.</p>}
+          <p className={styles.previewReminder}>Pastikan seluruh udang terlihat, tidak bertumpuk, dan difoto dari jarak 29 cm.</p>
+          <div className={styles.previewActions}>
+            <button type="button" className={styles.primaryButton} onClick={handleStartSubmit}><ScanLine size={17} aria-hidden="true" /> Analisis foto</button>
+            <button type="button" className={styles.secondaryButton} onClick={handleRetake}><RotateCcw size={16} aria-hidden="true" /> Ganti foto</button>
+          </div>
+        </div>
+      )}
+
+      {uiState === 'uploading' && (
+        <div className={styles.waiting} aria-busy="true">
+          <LoaderCircle className={styles.spinner} size={36} strokeWidth={1.5} aria-hidden="true" />
+          <h3 className={styles.title}>Menganalisis foto udang</h3>
+          <p className={styles.description}>{useMock ? 'Menyiapkan hasil simulasi untuk mencoba alur analisis.' : 'Foto sedang diproses untuk menghitung jumlah dan memperkirakan berat udang.'}</p>
+          <button type="button" className={styles.cancelButton} onClick={handleCancelUpload}>Batalkan analisis</button>
+        </div>
+      )}
+
+      {uiState === 'error' && errorDetails && mappedError && (
+        <div className={styles.errorPanel}>
+          <AlertCircle className={styles.errorIcon} size={30} strokeWidth={1.5} aria-hidden="true" />
+          <div role="alert">
+            <h3 ref={stateHeadingRef} tabIndex={-1} className={styles.title}>{mappedError.title}</h3>
+            <p className={styles.errorMessage}>{errorDetails.message || mappedError.message}</p>
+          </div>
+          <div className={styles.actions}>
+            {processedData && <button type="button" className={styles.primaryButton} onClick={handleStartSubmit}>Coba analisis lagi</button>}
+            <button type="button" className={processedData ? styles.secondaryButton : styles.primaryButton} onClick={handleRetake}>Pilih foto lain</button>
+          </div>
+          {errorDetails.requestId && <p className={styles.requestId}>ID permintaan: <code>{errorDetails.requestId}</code></p>}
         </div>
       )}
     </div>
   );
 }
-

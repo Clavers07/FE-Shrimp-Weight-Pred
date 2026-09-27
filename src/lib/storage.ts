@@ -2,17 +2,38 @@ import { ScanHistoryItem } from './types';
 
 const STORAGE_KEY = 'shrimp_weight_scan_history_v1';
 const MAX_HISTORY_ITEMS = 50;
+const HISTORY_CHANGE_EVENT = 'shrimp-history-change';
+const EMPTY_HISTORY: ScanHistoryItem[] = [];
+let cachedRaw: string | null = null;
+let cachedHistory: ScanHistoryItem[] = EMPTY_HISTORY;
+
+export function subscribeToScanHistory(onChange: () => void): () => void {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY || event.key === null) onChange();
+  };
+  window.addEventListener('storage', onStorage);
+  window.addEventListener(HISTORY_CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener('storage', onStorage);
+    window.removeEventListener(HISTORY_CHANGE_EVENT, onChange);
+  };
+}
 
 export function getScanHistory(): ScanHistoryItem[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') return EMPTY_HISTORY;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    // React's external-store subscription needs a stable snapshot until data changes.
+    if (raw !== cachedRaw) {
+      cachedRaw = raw;
+      cachedHistory = EMPTY_HISTORY;
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) cachedHistory = parsed;
+    }
+    return cachedHistory;
   } catch (err) {
     console.warn('[Storage] Failed to parse scan history from localStorage:', err);
-    return [];
+    return EMPTY_HISTORY;
   }
 }
 
@@ -114,12 +135,14 @@ export async function saveScanResultToHistory(
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT));
   } catch (err) {
     console.error('[Storage] Error saving to localStorage (storage full?):', err);
     // If quota exceeded, try trimming older items
     try {
       const trimmed = [newItem, ...history.slice(0, 10)];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+      window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT));
     } catch {
       // ignore
     }
@@ -133,6 +156,7 @@ export function deleteScanHistoryItem(id: string): ScanHistoryItem[] {
   const updated = history.filter((h) => h.id !== id);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT));
   } catch (err) {
     console.error('[Storage] Error deleting item from localStorage:', err);
   }
@@ -143,6 +167,7 @@ export function clearScanHistory(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT));
   } catch (err) {
     console.error('[Storage] Error clearing localStorage history:', err);
   }
